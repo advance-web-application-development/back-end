@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const app = express();
 const cors = require("cors");
 const config = require("../config/config").getConfig();
+const authRouter = require("./auth/auth.route");
 //config cors
 const corsOptions = {
   origin: "*",
@@ -29,7 +30,7 @@ app.get("/", (req, res) => {
   res.send("This is service of our project . Today is " + new Date());
 });
 
-// app.use("/auth", authRouter);
+app.use("/auth", authRouter);
 
 app.use("/", (req, res) => {
   res.status(404).send({ url: req.originalUrl + " not found" });
