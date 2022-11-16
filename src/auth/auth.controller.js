@@ -16,20 +16,30 @@ const { confirmationCode } = require("../../utils/confirmationCode");
 //register account
 exports.register = async (req, res) => {
   try {
-    if (!req.body.username || (!req.body.password && !req.body.role_id)) {
-      return res.status(400).send("No username or password or role found");
+    if (
+      !req.body.username &&
+      !req.body.password &&
+      !req.body.role_id &&
+      !req.body.email
+    ) {
+      return res.status(400).send("Not enough information");
     }
+    // console.log("req body ", req.body);
     const username = req.body.username.toLowerCase();
-    const user = await User.findOne({ username: username });
+    const email = req.body.email.toLowerCase();
+    const user = await User.findOne({
+      $or: [{ username: username }, { email: email }],
+    });
     console.log("user", user);
-    if (user && user != null && user != []) {
-      res.status(409).send("Username is already in use");
+    if (user) {
+      res.status(409).send("Username or email is already in use");
     } else {
       console.log("Start create account");
       const code = confirmationCode();
       const hashPassword = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
       const newUser = {
         username: username,
+        email: email,
         password: hashPassword,
         role_id: req.body.role_id,
         is_activate: false,
@@ -44,7 +54,7 @@ exports.register = async (req, res) => {
           );
       }
 
-      sendConfirmationEmail(createUser.username, createUser.username, code);
+      sendConfirmationEmail(createUser.username, createUser.email, code);
       return res.send({
         username,
       });
@@ -58,8 +68,10 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const username = req.body.username.toLowerCase();
   const password = req.body.password;
-
-  const user = await User.findOne({ username: username });
+  console.log("req body ", req.body);
+  const user = await User.findOne({
+    $or: [{ username: username }, { email: username }],
+  });
   console.log("user login ", user);
   if (!user || user == null) {
     return res.status(401).send("Account not found");
