@@ -7,7 +7,10 @@ const User = require("../user/user.model");
 //variables
 const jwtVariable = require("../../variables/jwt");
 const { SALT_ROUNDS } = require("../../variables/auth");
-
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(
+  "822297739446-deshsuk8vegbl4lpb1ehfpfgm7n80eim.apps.googleusercontent.com"
+);
 const authMethod = require("./auth.method");
 
 //register account
@@ -149,4 +152,13 @@ exports.refreshToken = async (req, res) => {
   return res.json({
     accessToken,
   });
+};
+exports.googleLogin = async (req, res) => {
+  const { token } = req.body;
+  console.log("token ", token);
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.CLIENT_ID,
+  });
+  const { name, email, picture } = ticket.getPayload();
 };
