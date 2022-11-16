@@ -32,6 +32,9 @@ const User = mongoose.model(
       refreshToken: {
         type: String,
       },
+      confirmationCode: {
+        type: String,
+      },
     },
     { timestamps: true }
   )
