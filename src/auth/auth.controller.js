@@ -3,13 +3,16 @@ const randToken = require("rand-token");
 // hash pwd
 const bcrypt = require("bcrypt");
 const User = require("../user/user.model");
+const nodemailer = require("nodemailer");
 
 //variables
 const jwtVariable = require("../../variables/jwt");
 const { SALT_ROUNDS } = require("../../variables/auth");
-
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.CLIENT_ID);
 const authMethod = require("./auth.method");
-
+const { sendConfirmationEmail } = require("../../config/nodemailer");
+const { confirmationCode } = require("../../utils/confirmationCode");
 //register account
 exports.register = async (req, res) => {
   try {
@@ -23,15 +26,16 @@ exports.register = async (req, res) => {
       res.status(409).send("Username is already in use");
     } else {
       console.log("Start create account");
+      const code = confirmationCode();
       const hashPassword = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
       const newUser = {
         username: username,
         password: hashPassword,
         role_id: req.body.role_id,
         is_activate: false,
+        confirmationCode: code,
       };
       const createUser = await User.create(newUser);
-      console.log("create user", createUser);
       if (!createUser) {
         res
           .status(400)
@@ -39,6 +43,8 @@ exports.register = async (req, res) => {
             "There was an error in creating an account. Please try again after few minutes"
           );
       }
+
+      sendConfirmationEmail(createUser.username, createUser.username, code);
       return res.send({
         username,
       });
@@ -149,4 +155,31 @@ exports.refreshToken = async (req, res) => {
   return res.json({
     accessToken,
   });
+};
+exports.googleLogin = async (req, res) => {
+  const { token } = req.body;
+  console.log("token ", token);
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.CLIENT_ID,
+  });
+  const { name, email, picture } = ticket.getPayload();
+  console.log(ticket.getPayload());
+};
+exports.verifyEmail = async (req, res) => {
+  User.findOne({ confirmationCode: req.params.confirmationCode })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send({ message: "User Not found." });
+      }
+      user.is_activated = true;
+      user.save((err) => {
+        if (err) {
+          res.status(500).send({ message: err });
+          return;
+        }
+      });
+      res.status(200).send({ message: "Verify email successful!!!" });
+    })
+    .catch((e) => console.log("error", e));
 };

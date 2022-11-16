@@ -7,5 +7,6 @@ const authController = require("./auth.controller");
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.post("/refresh", authController.refreshToken);
-
+router.post("/google", authController.googleLogin);
+router.get("/confirm/:confirmationCode", authController.verifyEmail);
 module.exports = router;
