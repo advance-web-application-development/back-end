@@ -7,6 +7,8 @@ const cors = require("cors");
 const config = require("../config/config").getConfig();
 const authRouter = require("./auth/auth.route");
 const userRouter = require("./user/user.route");
+const groupRouter = require("./group/group.route");
+
 //config cors
 const corsOptions = {
   origin: "*",
@@ -33,6 +35,7 @@ app.get("/", (req, res) => {
 
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
+app.use("/group", groupRouter);
 
 app.use("/", (req, res) => {
   res.status(404).send({ url: req.originalUrl + " not found" });
