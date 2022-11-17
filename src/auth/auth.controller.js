@@ -4,6 +4,7 @@ const randToken = require("rand-token");
 const bcrypt = require("bcrypt");
 const User = require("../user/user.model");
 const nodemailer = require("nodemailer");
+const { v4: uuidv4 } = require('uuid');
 
 //variables
 const jwtVariable = require("../../variables/jwt");
@@ -33,6 +34,7 @@ exports.register = async (req, res) => {
       const code = confirmationCode();
       const hashPassword = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
       const newUser = {
+        id: uuidv4(),
         username: username,
         email: email,
         password: hashPassword,
