@@ -20,7 +20,7 @@ exports.isAuth = async (req, res, next) => {
     accessTokenFromHeader,
     accessTokenSecret
   );
-
+  console.log("verified ", verified);
   if (!verified) {
     return res.status(401).send("Your access token cannot verify");
   }

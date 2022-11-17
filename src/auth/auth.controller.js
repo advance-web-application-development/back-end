@@ -16,22 +16,26 @@ const { confirmationCode } = require("../../utils/confirmationCode");
 //register account
 exports.register = async (req, res) => {
   try {
-    if (!req.body.username || (!req.body.password && !req.body.role_id)) {
-      return res.status(400).send("No username or password or role found");
+    if (!req.body.username && !req.body.password && !req.body.email) {
+      return res.status(400).send("Not enough information");
     }
+    // console.log("req body ", req.body);
     const username = req.body.username.toLowerCase();
-    const user = await User.findOne({ username: username });
+    const email = req.body.email.toLowerCase();
+    const user = await User.findOne({
+      $or: [{ username: username }, { email: email }],
+    });
     console.log("user", user);
-    if (user && user != null && user != []) {
-      res.status(409).send("Username is already in use");
+    if (user) {
+      res.status(409).send("Username or email is already in use");
     } else {
       console.log("Start create account");
       const code = confirmationCode();
       const hashPassword = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
       const newUser = {
         username: username,
+        email: email,
         password: hashPassword,
-        role_id: req.body.role_id,
         is_activate: false,
         confirmationCode: code,
       };
@@ -44,7 +48,7 @@ exports.register = async (req, res) => {
           );
       }
 
-      sendConfirmationEmail(createUser.username, createUser.username, code);
+      sendConfirmationEmail(createUser.username, createUser.email, code);
       return res.send({
         username,
       });
@@ -58,8 +62,9 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const username = req.body.username.toLowerCase();
   const password = req.body.password;
-
-  const user = await User.findOne({ username: username });
+  const user = await User.findOne({
+    $or: [{ username: username }, { email: username }],
+  });
   console.log("user login ", user);
   if (!user || user == null) {
     return res.status(401).send("Account not found");
@@ -157,14 +162,80 @@ exports.refreshToken = async (req, res) => {
   });
 };
 exports.googleLogin = async (req, res) => {
-  const { token } = req.body;
-  console.log("token ", token);
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.CLIENT_ID,
-  });
-  const { name, email, picture } = ticket.getPayload();
-  console.log(ticket.getPayload());
+  try {
+    const { token } = req.body;
+    console.log("token ", token);
+    console.log("client id ", process.env.CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.CLIENT_ID,
+    });
+    const { name, email, picture } = ticket.getPayload();
+    console.log("payload ", ticket.getPayload());
+
+    let user = await User.findOne({ email: email });
+    console.log("user find first", user);
+    if (!user) {
+      //create user
+      const code = confirmationCode();
+      const newUser = {
+        username: email,
+        email: email,
+        password: "",
+        is_activate: false,
+        confirmationCode: code,
+      };
+      const createUser = await User.create(newUser);
+      if (!createUser) {
+        res
+          .status(400)
+          .send(
+            "There was an error in creating an account. Please try again after few minutes"
+          );
+      }
+      sendConfirmationEmail(createUser.username, createUser.email, code);
+    }
+    //update user
+    user = await User.findOne({ email: email });
+
+    console.log("user find second ", user);
+    const accessTokenLife =
+      process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
+    const accessTokenSecret =
+      process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
+    const dataForAccessToken = {
+      username: user.username,
+    };
+    const accessToken = await authMethod.generateToken(
+      dataForAccessToken,
+      accessTokenSecret,
+      accessTokenLife
+    );
+    if (!accessToken) {
+      return res.status(401).send("Login failed");
+    }
+    // create refresh token
+    let refreshToken = randToken.generate(jwtVariable.refreshTokenSize);
+
+    if (!user.refreshToken) {
+      // create user regfresh token
+      await User.updateOne(
+        { username: user.username },
+        { refreshToken: refreshToken }
+      );
+    } else {
+      refreshToken = user.refreshToken;
+    }
+    return res.json({
+      msg: "Login successful",
+      accessToken,
+      refreshToken,
+      username: user.username,
+    });
+  } catch (err) {
+    console.log("err ", err);
+    return res.status(401).send("Login failed");
+  }
 };
 exports.verifyEmail = async (req, res) => {
   User.findOne({ confirmationCode: req.params.confirmationCode })
