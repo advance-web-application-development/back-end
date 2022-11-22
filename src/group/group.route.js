@@ -7,12 +7,13 @@ const authMiddleware = require("../auth/auth.middleware");
 const isAuth = authMiddleware.isAuth;
 
 // declare route
-router.get("/", groupController.getMyGroup);
-router.get("/owner", groupController.getMyOwnerGroup);
-router.post("/:id", groupController.addMember);
-router.post("/", groupController.createGroup);
-router.post("/toggleRole/:id", groupController.toggleRole);
-router.delete("/member/:id", groupController.deleteMember);
+router.get("/", isAuth, groupController.getMyGroup);
+router.get("/member/:id", isAuth, groupController.getGroupMember);
+router.get("/owner", isAuth, groupController.getMyOwnerGroup);
+router.post("/:id", isAuth, groupController.addMember);
+router.post("/", isAuth, groupController.createGroup);
+router.post("/toggleRole/:id", isAuth, groupController.toggleRole);
+router.delete("/member/:id", isAuth, groupController.deleteMember);
 
 module.exports = router;
 

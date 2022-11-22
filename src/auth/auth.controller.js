@@ -181,6 +181,7 @@ exports.googleLogin = async (req, res) => {
       //create user
       const code = confirmationCode();
       const newUser = {
+        id: uuidv4(),
         username: email,
         email: email,
         password: "",
