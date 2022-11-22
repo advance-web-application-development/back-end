@@ -10,8 +10,7 @@ const testUser= {
 }
 const createGroup = async(req, res)=>{
     const {name}= req.body;
-    // const {username}=req.user;
-    const user=testUser;
+    const user=req.user;
     const group = await Group.create({id:uuidv4(),name:name});
     if (!group||!user) {
         return res
@@ -38,10 +37,10 @@ const createGroup = async(req, res)=>{
 }
 const addMember = async (req, res)=>
 {
-    // const {username}= req.body;
-    const {username} = 'minh9';
+    const {email}= req.body;
     const groupId=req.params.id;
-    const user =await _getUserByUsername(username)
+    const user =await _getUserByEmail(email)
+
     const validate=await _validateGroup(groupId);
     console.log(validate);
 
@@ -96,10 +95,12 @@ const deleteMember = async(req, res)=>
 }
 const getMyGroup = async(req, res)=>
 {
-    const user = testUser;
+    const user = req.user;
+    
     const userGroup = await UserGroup.find({ user_id: user.id, is_deleted: false });
     let groups=[];
     for (const ug of userGroup) {
+        console.log(ug)
         const group = await Group.findOne({ id: ug.group_id });
         if(group) groups.push(group)
     };
@@ -110,7 +111,7 @@ const getMyGroup = async(req, res)=>
 }
 const getMyOwnerGroup = async(req, res)=>
 {
-    const user = testUser;
+    const user = req.user;
     const userGroup = await UserGroup.find({ user_id: user.id, role: 'owner', is_deleted: false});
     let groups=[];
     for (const ug of userGroup) {
@@ -126,15 +127,15 @@ const getGroupMember = async(req, res)=>{
     let users=[];
     for (const ug of userGroup) {
         const user = await User.findOne({ id: ug.user_id });
+        console.log(ug)
         if(user) users.push({id: ug.id, username: user.username, email: user.email, role: ug.role})
     };
 
-    return res.send({groups});
+    return res.send({users});
 
 }
 const _validateGroup = async(id)=>{
     const group = await Group.findOne({ id: id });
-    console.log(id);
     if(group&&group.length!=0) return true;
     return false;
 }
@@ -143,8 +144,8 @@ const _validateRole = (newRole)=>{
     return availableRole.includes(newRole);
 }
 
-const _getUserByUsername = async(username)=>{
-    const user = await User.findOne({ email: 'hadtnt73@gmail.com' });
+const _getUserByEmail = async(email)=>{
+    const user = await User.findOne({ email: email });
     return user;
 }
 module.exports={
@@ -153,5 +154,6 @@ module.exports={
     toggleRole,
     getMyGroup,
     getMyOwnerGroup,
-    deleteMember
+    deleteMember,
+    getGroupMember
 }

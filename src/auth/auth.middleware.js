@@ -24,8 +24,7 @@ exports.isAuth = async (req, res, next) => {
   if (!verified) {
     return res.status(401).send("Your access token cannot verify");
   }
-  // const user = await userModel.getUser(verified.payload.username);
-  const user = await User.findOne({ username: verified.payload.username });
+  const user = await userModel.getUser(verified.payload.username);
   req.user = user;
 
   return next();
