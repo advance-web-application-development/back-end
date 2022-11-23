@@ -14,6 +14,10 @@ router.post("/:id", isAuth, groupController.addMember);
 router.post("/", isAuth, groupController.createGroup);
 router.post("/toggleRole/:id", isAuth, groupController.toggleRole);
 router.delete("/member/:id", isAuth, groupController.deleteMember);
+router.get("/join/:id", isAuth, groupController.joinGroup);
+router.get("/escape/:id", isAuth, groupController.exitGroup);
+router.get("/isMember/:id", isAuth, groupController.isMember);
+router.post("/sendInvitation/:id", isAuth, groupController.sendInvitationMail);
 
 module.exports = router;
 
