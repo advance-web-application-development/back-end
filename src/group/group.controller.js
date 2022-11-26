@@ -3,6 +3,7 @@ const UserGroup = require("./user_group.model");
 const User = require("../user/user.model");
 const { v4: uuidv4 } = require('uuid');
 const { sendInvitationEmail } = require("../../config/nodemailer");
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 const createGroup = async(req, res)=>{
     const {name}= req.body;
@@ -213,7 +214,7 @@ const exitGroup = async(req, res)=>
 const joinGroup = async(req, res)=>
 {
     const groupId=req.params.id;
-     const user = req.user;
+    const user = req.user;
     const validate=await _validateGroup(groupId);
     console.log(validate);
 
@@ -292,6 +293,35 @@ const sendInvitationMail = async(req, res)=>
       });
 
 }
+const confirmMail = async(req, res)=>
+{
+    const groupId=req.params.id;
+    const user = req.user;
+    const validate=await _validateGroup(groupId);
+    console.log(validate);
+    if(!user||user.length==0)
+    {
+        console.log(FRONTEND_URL)
+        return res.status(200).redirect(FRONTEND_URL);
+
+    }
+    if(!validate)
+    {
+        return res
+        .status(400)
+        .send(
+            "There was an error in joining a group. Please try again after few minutes"
+        );
+    }
+    const newMember={
+        id: uuidv4(),
+        group_id: groupId,
+        user_id: user.id,
+        role: 'member',
+    }
+    const member = await UserGroup.create(newMember);
+      res.status(200).send({ message: "Joining new group is successful!!!" });
+}
 module.exports={
     createGroup,
     addMember,
@@ -303,5 +333,6 @@ module.exports={
     exitGroup,
     joinGroup,
     isMember,
-    sendInvitationMail
+    sendInvitationMail,
+    confirmMail
 }
