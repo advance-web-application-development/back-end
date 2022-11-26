@@ -16,12 +16,7 @@ const { confirmationCode } = require("../../utils/confirmationCode");
 //register account
 exports.register = async (req, res) => {
   try {
-    if (
-      !req.body.username &&
-      !req.body.password &&
-      !req.body.role_id &&
-      !req.body.email
-    ) {
+    if (!req.body.username && !req.body.password && !req.body.email) {
       return res.status(400).send("Not enough information");
     }
     // console.log("req body ", req.body);
@@ -41,7 +36,7 @@ exports.register = async (req, res) => {
         username: username,
         email: email,
         password: hashPassword,
-        role_id: req.body.role_id,
+        // role_id: req.body.role_id,
         is_activate: false,
         confirmationCode: code,
       };
