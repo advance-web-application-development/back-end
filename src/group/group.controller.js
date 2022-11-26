@@ -36,7 +36,7 @@ const addMember = async (req, res)=>
 {
     const {email}= req.body;
     const groupId=req.params.id;
-    const checkPermission=(await _isOwner(req.user, groupId))||(await _isCoOwner(req.user, groupId));
+    const checkPermission=(await _isOwner(req.user, groupId));
     if(!checkPermission)
     {
         return res
@@ -56,6 +56,15 @@ const addMember = async (req, res)=>
         .status(400)
         .send(
             "There was an error in creating a group. Please try again after few minutes"
+        );
+    }
+    const userGroup = await UserGroup.find({ group_id: groupId, user_id: user.id, is_deleted: false });
+    if(userGroup&&userGroup.length>0)
+    {
+        return res
+        .status(400)
+        .send(
+            "This user already joined this group"
         );
     }
     const newMember={
@@ -82,15 +91,15 @@ const toggleRole = async (req, res)=>
         );
     }
 
-    // const checkPermission=await _isOwner(req.user, userGroup.group_id);
-    // if(!checkPermission)
-    // {
-    //     return res
-    //     .status(400)
-    //     .send(
-    //         "You are not allowed to access this"
-    //     );
-    // }
+    const checkPermission=await _isOwner(req.user, userGroup.group_id);
+    if(!checkPermission)
+    {
+        return res
+        .status(400)
+        .send(
+            "You are not allowed to access this"
+        );
+    }
     if(!validate)
     {
         return res
@@ -110,7 +119,7 @@ const deleteMember = async(req, res)=>
 {
     const memberId=req.params.id;
     const userGroup = await UserGroup.find({ id: memberId, is_deleted:false });
-    const checkPermission=(await _isOwner(req.user, groupId))||(await _isCoOwner(req.user, groupId));
+    const checkPermission=await _isOwner(req.user, groupId);
     if(!checkPermission)
     {
         return res
@@ -202,9 +211,23 @@ const _isCoOwner = async(user, groupId)=>{
 const exitGroup = async(req, res)=>
 {
     const groupId=req.params.id;
-     const user = req.user;
+    const user = req.user;
     const userGroup = await UserGroup.findOne({ group_id: groupId, user_id: user.id, is_deleted: false });
-    console.log(userGroup);
+    console.log('user in group:', userGroup)
+    if(userGroup.role=='owner')
+    {
+        const groupOwner = await UserGroup.find({ group_id: groupId, role:'owner', is_deleted: false });
+        console.log('another owner: ',groupOwner)
+
+        if(!groupOwner||groupOwner.length<2)
+        {
+            return res
+            .status(400)
+            .send(
+                "Please assign another owner before leaving this group"
+            );
+        }
+    }
     const member=await UserGroup.updateOne(
       { id: userGroup.id },
       { is_deleted: true}
@@ -254,7 +277,8 @@ const isMember = async(req, res)=>
 const sendInvitationMail = async(req, res)=>
 {
     const groupId=req.params.id;
-    const checkPermission=(await _isOwner(req.user, groupId))||(await _isCoOwner(req.user, groupId));
+    
+    const checkPermission=await _isOwner(req.user, groupId);
     if(!checkPermission)
     {
         return res
@@ -265,10 +289,11 @@ const sendInvitationMail = async(req, res)=>
     }
     const {email}= req.body;
     const user =await _getUserByEmail(email)
+    console.log(user)
     if(user&&user.id)
     {
         const userGroup = await UserGroup.find({ group_id: groupId, user_id: user.id, is_deleted: false });
-        if(userGroup)
+        if(userGroup&&userGroup.length>0)
         {
             return res
             .status(400)
@@ -304,6 +329,15 @@ const confirmMail = async(req, res)=>
         console.log(FRONTEND_URL)
         return res.status(200).redirect(FRONTEND_URL);
 
+    }
+    const userGroup = await UserGroup.find({ group_id: groupId, user_id: user.id, is_deleted: false });
+    if(userGroup&&userGroup.length>0)
+    {
+        return res
+        .status(400)
+        .send(
+            "You already joined this group"
+        );
     }
     if(!validate)
     {
