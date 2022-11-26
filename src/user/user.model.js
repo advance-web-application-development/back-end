@@ -7,6 +7,12 @@ const User = mongoose.model(
   "User",
   new Schema(
     {
+      id: {
+        type: String,
+        required: true,
+        unique: true,
+      },
+      
       email: {
         type: String,
         required: true,
@@ -14,13 +20,16 @@ const User = mongoose.model(
       },
       username: {
         type: String,
+        required: true,
         unique: true,
       },
       password: {
         type: String,
+        required: true,
       },
       // role_id: {
       //   type: String,
+      //   required: true,
       //   enum: ["teacher", "student"],
       // },
       is_deleted: {
