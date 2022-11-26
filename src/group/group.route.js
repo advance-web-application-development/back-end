@@ -18,6 +18,7 @@ router.get("/join/:id", isAuth, groupController.joinGroup);
 router.get("/escape/:id", isAuth, groupController.exitGroup);
 router.get("/isMember/:id", isAuth, groupController.isMember);
 router.post("/sendInvitation/:id", isAuth, groupController.sendInvitationMail);
+router.get("/confirmMail/:id", isAuth, groupController.confirmMail);
 
 module.exports = router;
 
