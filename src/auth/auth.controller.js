@@ -2,7 +2,7 @@
 const randToken = require("rand-token");
 // hash pwd
 const bcrypt = require("bcrypt");
-const User = require("../user/user.model");
+const { User } = require("../user/user.model");
 const { v4: uuidv4 } = require("uuid");
 //variables
 const jwtVariable = require("../../variables/jwt");
@@ -61,53 +61,62 @@ exports.register = async (req, res) => {
 
 //login account
 exports.login = async (req, res) => {
-  const username = req.body.username.toLowerCase();
-  const password = req.body.password;
-  console.log("req body ", req.body);
-  const user = await User.findOne({
-    $or: [{ username: username }, { email: username }],
-  });
-  console.log("user login ", user);
-  if (!user || user == null) {
-    return res.status(401).send("Account not found");
-  }
-  const isPasswordValid = bcrypt.compareSync(password, user.password);
-  if (!isPasswordValid) {
-    return res.status(401).send("Password is not valid");
-  }
-  const accessTokenLife =
-    process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
-  const accessTokenSecret =
-    process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
-  const dataForAccessToken = {
-    username: user.username,
-  };
-  const accessToken = await authMethod.generateToken(
-    dataForAccessToken,
-    accessTokenSecret,
-    accessTokenLife
-  );
-  if (!accessToken) {
-    return res.status(401).send("Login failed");
-  }
-  // create refresh token
-  let refreshToken = randToken.generate(jwtVariable.refreshTokenSize);
-
-  if (!user.refreshToken) {
-    // create user regfresh token
-    await User.updateOne(
-      { username: user.username },
-      { refreshToken: refreshToken }
+  try {
+    const username = req.body.username.toLowerCase();
+    const password = req.body.password;
+    console.log("req body ", req.body);
+    const user = await User.findOne({
+      $or: [{ username: username }, { email: username }],
+    });
+    console.log("user login ", user);
+    if (!user || user == null) {
+      return res.status(401).send("Account not found");
+    }
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).send("Password is not valid");
+    }
+    const accessTokenLife =
+      process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
+    const accessTokenSecret =
+      process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
+    const dataForAccessToken = {
+      username: user.username,
+    };
+    const accessToken = await authMethod.generateToken(
+      dataForAccessToken,
+      accessTokenSecret,
+      accessTokenLife
     );
-  } else {
-    refreshToken = user.refreshToken;
+    if (!accessToken) {
+      return res.status(401).send("Login failed");
+    }
+    // create refresh token
+    let refreshToken = randToken.generate(jwtVariable.refreshTokenSize);
+
+    if (!user.refreshToken) {
+      // create user regfresh token
+      await User.updateOne(
+        { username: user.username },
+        { refreshToken: refreshToken }
+      );
+    } else {
+      refreshToken = user.refreshToken;
+    }
+    return res.json({
+      msg: "Login successful",
+      accessToken,
+      refreshToken,
+      username: user.username,
+    });
+  } catch (error) {
+    return res.json({
+      msg: "Login Fail. Has Exception: " + error.message,
+      username: null,
+      accessToken: null,
+      refreshToken: null,
+    });
   }
-  return res.json({
-    msg: "Login successful",
-    accessToken,
-    refreshToken,
-    username: user.username,
-  });
 };
 
 exports.refreshToken = async (req, res) => {
