@@ -5,7 +5,7 @@ const userController = require("./user.controller");
 
 const isAuth = authMiddleware.isAuth;
 router.get("/", isAuth, async (req, res) => {
-  res.send(req.user);
+  res.send({ user: req.user });
 });
 router.get("/list", isAuth, userController.getAllUser);
 
