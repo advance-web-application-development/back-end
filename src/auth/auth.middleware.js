@@ -2,7 +2,7 @@
 const jwtVariable = require("../../variables/jwt");
 
 //get userModel
-const User = require("../user/user.model");
+const { User } = require("../user/user.model");
 
 //auth method
 const authMethod = require("./auth.method");
@@ -24,8 +24,9 @@ exports.isAuth = async (req, res, next) => {
   if (!verified) {
     return res.status(401).send("Your access token cannot verify");
   }
+  console.log("username:", verified.payload.username);
   let user = await User.findOne({ username: verified.payload.username });
-  delete user.password;
+  // delete user.password;
   req.user = user;
 
   return next();
