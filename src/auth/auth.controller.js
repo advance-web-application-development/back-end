@@ -4,7 +4,7 @@ const randToken = require("rand-token");
 const bcrypt = require("bcrypt");
 const User = require("../user/user.model");
 const nodemailer = require("nodemailer");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 //variables
 const jwtVariable = require("../../variables/jwt");
@@ -184,6 +184,80 @@ exports.googleLogin = async (req, res) => {
       const code = confirmationCode();
       const newUser = {
         id: uuidv4(),
+        username: email,
+        email: email,
+        password: "",
+        is_activate: false,
+        confirmationCode: code,
+      };
+      const createUser = await User.create(newUser);
+      if (!createUser) {
+        res
+          .status(400)
+          .send(
+            "There was an error in creating an account. Please try again after few minutes"
+          );
+      }
+      sendConfirmationEmail(createUser.username, createUser.email, code);
+    }
+    //update user
+    user = await User.findOne({ email: email });
+
+    console.log("user find second ", user);
+    const accessTokenLife =
+      process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
+    const accessTokenSecret =
+      process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
+    const dataForAccessToken = {
+      username: user.username,
+    };
+    const accessToken = await authMethod.generateToken(
+      dataForAccessToken,
+      accessTokenSecret,
+      accessTokenLife
+    );
+    if (!accessToken) {
+      return res.status(401).send("Login failed");
+    }
+    // create refresh token
+    let refreshToken = randToken.generate(jwtVariable.refreshTokenSize);
+
+    if (!user.refreshToken) {
+      // create user regfresh token
+      await User.updateOne(
+        { username: user.username },
+        { refreshToken: refreshToken }
+      );
+    } else {
+      refreshToken = user.refreshToken;
+    }
+    return res.json({
+      msg: "Login successful",
+      accessToken,
+      refreshToken,
+      username: user.username,
+    });
+  } catch (err) {
+    console.log("err ", err);
+    return res.status(401).send("Login failed");
+  }
+  try {
+    const { token } = req.body;
+    console.log("token ", token);
+    console.log("client id ", process.env.CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.CLIENT_ID,
+    });
+    const { name, email, picture } = ticket.getPayload();
+    console.log("payload ", ticket.getPayload());
+
+    let user = await User.findOne({ email: email });
+    console.log("user find first", user);
+    if (!user) {
+      //create user
+      const code = confirmationCode();
+      const newUser = {
         username: email,
         email: email,
         password: "",
