@@ -81,7 +81,7 @@ const toggleRole = async (req, res)=>
     const memberId=req.params.id;
     const {newRole} = req.body;
     const validate = _validateRole(newRole);
-    const userGroup = _getUserGroupById(memberId)
+    const userGroup = await _getUserGroupById(memberId)
     if(!userGroup)
     {
         return res
@@ -92,6 +92,7 @@ const toggleRole = async (req, res)=>
     }
 
     const checkPermission=await _isOwner(req.user, userGroup.group_id);
+    console.log(userGroup)
     if(!checkPermission)
     {
         return res
@@ -199,7 +200,7 @@ const _getUserGroupById = async(id)=>{
 const _isOwner = async(user, groupId)=>{
     
     const userGroup = await UserGroup.findOne({ group_id: groupId, user_id: user.id, is_deleted: false});
-    console.log(userGroup)
+    console.log(groupId)
     if( userGroup?.role=='owner') return true;
     return false;
 }
@@ -320,6 +321,7 @@ const sendInvitationMail = async(req, res)=>
 }
 const confirmMail = async(req, res)=>
 {
+
     const groupId=req.params.id;
     const user = req.user;
     const validate=await _validateGroup(groupId);
@@ -334,7 +336,6 @@ const confirmMail = async(req, res)=>
     if(userGroup&&userGroup.length>0)
     {
         return res
-        .status(400)
         .send(
             "You already joined this group"
         );
@@ -354,7 +355,13 @@ const confirmMail = async(req, res)=>
         role: 'member',
     }
     const member = await UserGroup.create(newMember);
-      res.status(200).send({ message: "Joining new group is successful!!!" });
+    res.status(200).send("Joining new group is successful!!!" );
+}
+const getAGroup=async(req, res)=>{
+    const id = req.params.id;
+    const group = await Group.findOne({id: id});
+
+    return res.send({group});
 }
 module.exports={
     createGroup,
@@ -368,5 +375,6 @@ module.exports={
     joinGroup,
     isMember,
     sendInvitationMail,
-    confirmMail
+    confirmMail,
+    getAGroup
 }

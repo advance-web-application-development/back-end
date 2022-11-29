@@ -10,6 +10,7 @@ const authMethod = require("./auth.method");
 exports.isAuth = async (req, res, next) => {
   // get access token from header
   const accessTokenFromHeader = req.headers.x_authorization;
+
   if (!accessTokenFromHeader) {
     return res.status(401).send("Cannot find access Token");
   }

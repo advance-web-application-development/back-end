@@ -7,6 +7,6 @@ const isAuth = authMiddleware.isAuth;
 router.get("/", isAuth, async (req, res) => {
   res.send({ user: req.user });
 });
-router.get("/list", isAuth, userController.getAllUser);
+router.get("/list", userController.getAllUser);
 
 module.exports = router;

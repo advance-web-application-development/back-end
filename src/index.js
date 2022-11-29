@@ -8,6 +8,7 @@ const config = require("../config/config").getConfig();
 const authRouter = require("./auth/auth.route");
 const userRouter = require("./user/user.route");
 const groupRouter = require("./group/group.route");
+const session = require('express-session');
 
 //config cors
 const corsOptions = {
@@ -28,7 +29,15 @@ app.use(cookieParser());
 // only send 1 bracket
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
+app.use(
+  session({
+    secret: "secret",
+    cookie: { maxAge: 60000000 },
+    resave: false,
+    saveUninitialized: true,
+    expires: { maxAge: 60000000 },
+  })
+);
 app.get("/", (req, res) => {
   res.send("This is service of our project . Today is " + new Date());
 });
