@@ -9,4 +9,14 @@ router.get("/", isAuth, async (req, res) => {
 });
 router.get("/list", userController.getAllUser);
 
+router.post(
+  "/profile",
+  isAuth,
+  (req, res, next) => {
+    console.log(JSON.stringify(req.body));
+    next();
+  },
+  userController.HandleProfile
+);
+
 module.exports = router;

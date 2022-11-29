@@ -1,3 +1,5 @@
+// npm i && npm start
+
 const dotenv = require("dotenv");
 const express = require("express");
 const cookieParser = require("cookie-parser");
@@ -9,6 +11,7 @@ const authRouter = require("./auth/auth.route");
 const userRouter = require("./user/user.route");
 const groupRouter = require("./group/group.route");
 const session = require('express-session');
+const logger = require("morgan");
 
 //config cors
 const corsOptions = {
@@ -38,6 +41,8 @@ app.use(
     expires: { maxAge: 60000000 },
   })
 );
+app.use(logger("common"));
+
 app.get("/", (req, res) => {
   res.send("This is service of our project . Today is " + new Date());
 });

@@ -6,8 +6,6 @@ const promisify = require("util").promisify;
 const sign = promisify(jwt.sign).bind(jwt);
 const verify = promisify(jwt.verify).bind(jwt);
 
-//generatte token
-//parameters: payload is object , secretSignature , tokenLife : lifetime of token
 exports.generateToken = async (payload, secretSignature, tokenLife) => {
   try {
     return await sign(
