@@ -18,6 +18,5 @@ router.post(
   },
   userController.HandleProfile
 );
-// router.post("/profile", userController.HandleProfile);
 
 module.exports = router;
