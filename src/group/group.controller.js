@@ -1,6 +1,6 @@
 const Group = require("./group.model");
 const UserGroup = require("./user_group.model");
-const User = require("../user/user.model");
+const {User} = require("../user/user.model");
 const { v4: uuidv4 } = require("uuid");
 const { sendInvitationEmail } = require("../../config/nodemailer");
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -271,23 +271,11 @@ const isMember = async (req, res) => {
   return res.send({ userGroup });
 };
 const sendInvitationMail = async (req, res) => {
-  const groupId = req.params.id;
+    const groupId = req.params.id;
 
-  const checkPermission = await _isOwner(req.user, groupId);
-  if (!checkPermission) {
-    return res.status(400).send("You are not allowed to access this");
-  }
-  const { email } = req.body;
-  const user = await _getUserByEmail(email);
-  console.log(user);
-  if (user && user.id) {
-    const userGroup = await UserGroup.find({
-      group_id: groupId,
-      user_id: user.id,
-      is_deleted: false,
-    });
-    if (userGroup && userGroup.length > 0) {
-      return res.status(400).send("This user already joined this group");
+    const checkPermission = await _isOwner(req.user, groupId);
+    if (!checkPermission) {
+      return res.status(400).send("You are not allowed to access this");
     }
     const { email } = req.body;
     const user = await _getUserByEmail(email);
@@ -315,7 +303,6 @@ const sendInvitationMail = async (req, res) => {
       group: group,
       email: email,
     });
-  }
 };
 const confirmMail = async (req, res) => {
   const groupId = req.params.id;
@@ -323,7 +310,6 @@ const confirmMail = async (req, res) => {
   const validate = await _validateGroup(groupId);
   console.log(validate);
   if (!user || user.length == 0) {
-    console.log(FRONTEND_URL);
     return res.status(200).redirect(FRONTEND_URL);
   }
   const userGroup = await UserGroup.find({
