@@ -44,69 +44,59 @@ const addMember = async (req, res) => {
   const validate = await _validateGroup(groupId);
   console.log(validate);
 
-    if(!validate||!user)
-    {
-        return res
-        .status(400)
-        .send(
-            "There was an error in creating a group. Please try again after few minutes"
-        );
-    }
-    const userGroup = await UserGroup.find({ group_id: groupId, user_id: user.id, is_deleted: false });
-    if(userGroup&&userGroup.length>0)
-    {
-        return res
-        .status(400)
-        .send(
-            "This user already joined this group"
-        );
-    }
-    const newMember={
-        id: uuidv4(),
-        group_id: groupId,
-        user_id: user.id,
-        role: 'member',
-    }
-    const member = await UserGroup.create(newMember);
-    return res.send({member});
-}
-const toggleRole = async (req, res)=>
-{
-    const memberId=req.params.id;
-    const {newRole} = req.body;
-    const validate = _validateRole(newRole);
-    const userGroup = await _getUserGroupById(memberId)
-    if(!userGroup)
-    {
-        return res
-        .status(400)
-        .send(
-            "There was an error in creating a group. Please try again after few minutes"
-        );
-    }
+  if (!validate || !user) {
+    return res
+      .status(400)
+      .send(
+        "There was an error in creating a group. Please try again after few minutes"
+      );
+  }
+  const userGroup = await UserGroup.find({
+    group_id: groupId,
+    user_id: user.id,
+    is_deleted: false,
+  });
+  if (userGroup && userGroup.length > 0) {
+    return res.status(400).send("This user already joined this group");
+  }
+  const newMember = {
+    id: uuidv4(),
+    group_id: groupId,
+    user_id: user.id,
+    role: "member",
+  };
+  const member = await UserGroup.create(newMember);
+  return res.send({ member });
+};
+const toggleRole = async (req, res) => {
+  const memberId = req.params.id;
+  const { newRole } = req.body;
+  const validate = _validateRole(newRole);
+  const userGroup = await _getUserGroupById(memberId);
+  if (!userGroup) {
+    return res
+      .status(400)
+      .send(
+        "There was an error in creating a group. Please try again after few minutes"
+      );
+  }
 
-    const checkPermission=await _isOwner(req.user, userGroup.group_id);
-    console.log(userGroup)
-    if(!checkPermission)
-    {
-        return res
-        .status(400)
-        .send(
-            "You are not allowed to access this"
-        );
-    }
-    if(!validate)
-    {
-        return res
-        .status(400)
-        .send(
-            "There was an error in creating a group. Please try again after few minutes"
-        );
-    }
-    const coOwner=await UserGroup.updateOne(
-      { id: memberId },
-      { role: newRole,}
-    );
+  const checkPermission = await _isOwner(req.user, userGroup.group_id);
+  console.log(userGroup);
+  if (!checkPermission) {
+    return res.status(400).send("You are not allowed to access this");
+  }
+  if (!validate) {
+    return res
+      .status(400)
+      .send(
+        "There was an error in creating a group. Please try again after few minutes"
+      );
+  }
+  const coOwner = await UserGroup.updateOne(
+    { id: memberId },
+    { role: newRole }
+  );
 
   return res.send({ coOwner });
 };
@@ -188,36 +178,49 @@ const _validateRole = (newRole) => {
   return availableRole.includes(newRole);
 };
 
-const _getUserByEmail = async(email)=>{
-    const user = await User.findOne({ email: email,  is_deleted: false });
-    return user;
-}
-const _getUserGroupById = async(id)=>{
-    const userGroup = await UserGroup.findOne({ id: id });
-    return userGroup;
-}
-const _isOwner = async(user, groupId)=>{
-    
-    const userGroup = await UserGroup.findOne({ group_id: groupId, user_id: user.id, is_deleted: false});
-    console.log(groupId)
-    if( userGroup?.role=='owner') return true;
-    return false;
-}
-const _isCoOwner = async(user, groupId)=>{
-    const userGroup = await UserGroup.findOne({ group_id: groupId, user_id: user.id, is_deleted:false });
-    if( userGroup?.role=='co-owner') return true;
-    return false;
-}
-const exitGroup = async(req, res)=>
-{
-    const groupId=req.params.id;
-    const user = req.user;
-    const userGroup = await UserGroup.findOne({ group_id: groupId, user_id: user.id, is_deleted: false });
-    console.log('user in group:', userGroup)
-    if(userGroup.role=='owner')
-    {
-        const groupOwner = await UserGroup.find({ group_id: groupId, role:'owner', is_deleted: false });
-        console.log('another owner: ',groupOwner)
+const _getUserByEmail = async (email) => {
+  const user = await User.findOne({ email: email, is_deleted: false });
+  return user;
+};
+const _getUserGroupById = async (id) => {
+  const userGroup = await UserGroup.findOne({ id: id });
+  return userGroup;
+};
+const _isOwner = async (user, groupId) => {
+  const userGroup = await UserGroup.findOne({
+    group_id: groupId,
+    user_id: user.id,
+    is_deleted: false,
+  });
+  console.log(groupId);
+  if (userGroup?.role == "owner") return true;
+  return false;
+};
+const _isCoOwner = async (user, groupId) => {
+  const userGroup = await UserGroup.findOne({
+    group_id: groupId,
+    user_id: user.id,
+    is_deleted: false,
+  });
+  if (userGroup?.role == "co-owner") return true;
+  return false;
+};
+const exitGroup = async (req, res) => {
+  const groupId = req.params.id;
+  const user = req.user;
+  const userGroup = await UserGroup.findOne({
+    group_id: groupId,
+    user_id: user.id,
+    is_deleted: false,
+  });
+  console.log("user in group:", userGroup);
+  if (userGroup.role == "owner") {
+    const groupOwner = await UserGroup.find({
+      group_id: groupId,
+      role: "owner",
+      is_deleted: false,
+    });
+    console.log("another owner: ", groupOwner);
 
     if (!groupOwner || groupOwner.length < 2) {
       return res
@@ -286,93 +289,85 @@ const sendInvitationMail = async (req, res) => {
     if (userGroup && userGroup.length > 0) {
       return res.status(400).send("This user already joined this group");
     }
-    const {email}= req.body;
-    const user =await _getUserByEmail(email)
-    console.log(user)
-    if(user&&user.id)
-    {
-        const userGroup = await UserGroup.find({ group_id: groupId, user_id: user.id, is_deleted: false });
-        if(userGroup&&userGroup.length>0)
-        {
-            return res
-            .status(400)
-            .send(
-                "This user already joined this group"
-            );
-        }
-    }
-    const group = await Group.findOne({ id: groupId,  is_deleted: false  });
-    if(!group)
-    {
-        return res
-        .status(400)
-        .send(
-            "There was an error in creating a group. Please try again after few minutes"
-        );
-    }
-    sendInvitationEmail(group, email)
-    return res.send({
-        group: group,
-        email: email
-      });
-
-}
-const confirmMail = async(req, res)=>
-{
-
-    const groupId=req.params.id;
-    const user = req.user;
-    const validate=await _validateGroup(groupId);
-    console.log(validate);
-    if(!user||user.length==0)
-    {
-        console.log(FRONTEND_URL)
-        return res.status(200).redirect(FRONTEND_URL);
-
-    }
-    const userGroup = await UserGroup.find({ group_id: groupId, user_id: user.id, is_deleted: false });
-    if(userGroup&&userGroup.length>0)
-    {
-        return res
-        .send(
-            "You already joined this group"
-        );
-    }
-    if(!validate)
-    {
-        return res
-        .status(400)
-        .send(
-            "There was an error in joining a group. Please try again after few minutes"
-        );
-    }
-    const newMember={
-        id: uuidv4(),
+    const { email } = req.body;
+    const user = await _getUserByEmail(email);
+    console.log(user);
+    if (user && user.id) {
+      const userGroup = await UserGroup.find({
         group_id: groupId,
         user_id: user.id,
-        role: 'member',
+        is_deleted: false,
+      });
+      if (userGroup && userGroup.length > 0) {
+        return res.status(400).send("This user already joined this group");
+      }
     }
-    const member = await UserGroup.create(newMember);
-    res.status(200).send("Joining new group is successful!!!" );
-}
-const getAGroup=async(req, res)=>{
-    const id = req.params.id;
-    const group = await Group.findOne({id: id});
+    const group = await Group.findOne({ id: groupId, is_deleted: false });
+    if (!group) {
+      return res
+        .status(400)
+        .send(
+          "There was an error in creating a group. Please try again after few minutes"
+        );
+    }
+    sendInvitationEmail(group, email);
+    return res.send({
+      group: group,
+      email: email,
+    });
+  }
+};
+const confirmMail = async (req, res) => {
+  const groupId = req.params.id;
+  const user = req.user;
+  const validate = await _validateGroup(groupId);
+  console.log(validate);
+  if (!user || user.length == 0) {
+    console.log(FRONTEND_URL);
+    return res.status(200).redirect(FRONTEND_URL);
+  }
+  const userGroup = await UserGroup.find({
+    group_id: groupId,
+    user_id: user.id,
+    is_deleted: false,
+  });
+  if (userGroup && userGroup.length > 0) {
+    return res.send("You already joined this group");
+  }
+  if (!validate) {
+    return res
+      .status(400)
+      .send(
+        "There was an error in joining a group. Please try again after few minutes"
+      );
+  }
+  const newMember = {
+    id: uuidv4(),
+    group_id: groupId,
+    user_id: user.id,
+    role: "member",
+  };
+  const member = await UserGroup.create(newMember);
+  res.status(200).send("Joining new group is successful!!!");
+};
+const getAGroup = async (req, res) => {
+  const id = req.params.id;
+  const group = await Group.findOne({ id: id });
 
-    return res.send({group});
-}
-module.exports={
-    createGroup,
-    addMember,
-    toggleRole,
-    getMyGroup,
-    getMyOwnerGroup,
-    deleteMember,
-    getGroupMember,
-    exitGroup,
-    joinGroup,
-    isMember,
-    sendInvitationMail,
-    confirmMail,
-    getAGroup
-}
+  return res.send({ group });
+};
+module.exports = {
+  createGroup,
+  addMember,
+  toggleRole,
+  getMyGroup,
+  getMyOwnerGroup,
+  deleteMember,
+  getGroupMember,
+  exitGroup,
+  joinGroup,
+  isMember,
+  sendInvitationMail,
+  confirmMail,
+  getAGroup,
+};

@@ -22,4 +22,3 @@ router.get("/confirmMail/:id", isAuth, groupController.confirmMail);
 router.get("/:id", isAuth, groupController.getAGroup);
 
 module.exports = router;
-
