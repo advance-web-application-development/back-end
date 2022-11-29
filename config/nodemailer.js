@@ -4,6 +4,7 @@ const configMail = require("../variables/mail");
 const user = configMail.user;
 const pass = configMail.pass;
 const URL = process.env.BACKEND_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 console.log("user email", user);
 const transport = nodemailer.createTransport({
@@ -41,7 +42,7 @@ module.exports.sendInvitationEmail = (group, email) => {
       html: `<h1>Invitation Email</h1>
           <h2>Hello : ${email}</h2>
           <p>Thank you for your cooperate. Please clicking this following link to join ${group.name} goup in kahoot</p>
-          <a href=${URL}/group/confirmMail/${group.id}> Click here</a>
+          <a href=${FRONTEND_URL}/group-invitation/${group.id}> Click here</a>
 
           </div>`,
     })
