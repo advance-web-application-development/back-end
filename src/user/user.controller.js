@@ -1,11 +1,21 @@
 const { UpdateUserById, GetUserByUserName, User } = require("./user.model");
 
+const ReturnCode = {
+  Success: 1,
+  Fail: 0,
+  InvalidMethod: 2,
+  InvalidRequestData: 3,
+  ErrorInDB: 4,
+  HasException: 5,
+};
+
 // #region mains controller
 const getAllUser = async (req, res) => {
   const users = await User.find();
   return res.send({ users });
 };
 
+//handle profile /profile
 const HandleProfile = async (req, res) => {
   var response;
   try {
@@ -14,7 +24,7 @@ const HandleProfile = async (req, res) => {
     if (method == null || method == "" || method.trim() == "") {
       response = CreateResponse(
         ReturnCode.InvalidMethod,
-        "Không truyền method",
+        "No tranmission method",
         null
       );
       return res.status(200).json(response);
@@ -22,7 +32,7 @@ const HandleProfile = async (req, res) => {
     if (requestData == null) {
       response = CreateResponse(
         ReturnCode.InvalidRequestData,
-        "Không truyền RequestData",
+        "No tranmission RequestData",
         null
       );
       return res.status(200).json(response);
@@ -37,7 +47,7 @@ const HandleProfile = async (req, res) => {
       default:
         response = CreateResponse(
           ReturnCode.InvalidMethod,
-          `Không hỗ trợ method[${method}]`
+          `No support method[${method}]`
         );
         break;
     }
@@ -57,14 +67,14 @@ const GetProfile = async (RequestData) => {
     if (!Reflect.has(RequestData, "Username")) {
       return CreateResponse(
         ReturnCode.InvalidRequestData,
-        "GetProfile fail. RequestData không chứa username"
+        "GetProfile fail. RequestData do not contain username"
       );
     }
     var result = await GetUserByUserName(RequestData);
     if (result == null) {
       return CreateResponse(
         ReturnCode.Fail,
-        "GetProfile fail. Không rõ kết quả db trả về",
+        "GetProfile fail. Database return unclear",
         null
       );
     }
@@ -79,7 +89,7 @@ const UpdateProfile = async (RequestData) => {
     if (!Reflect.has(RequestData, "Id")) {
       return CreateResponse(
         ReturnCode.InvalidRequestData,
-        "UpdateProfile fail. RequestData không chứa field Id"
+        "UpdateProfile fail. RequestData do not contain field Id"
       );
     }
     var result = await UpdateUserById(RequestData);
@@ -87,7 +97,7 @@ const UpdateProfile = async (RequestData) => {
     if (result == null) {
       return CreateResponse(
         ReturnCode.Fail,
-        "UpdateProfile fail. Không rõ kết quả db trả về",
+        "UpdateProfile fail. Database return unclear",
         null
       );
     }
@@ -113,15 +123,6 @@ const CreateResponse = async (ReturnCode, Description, ResponseData) => {
 };
 
 // #endregion
-
-const ReturnCode = {
-  Success: 1,
-  Fail: 0,
-  InvalidMethod: 2,
-  InvalidRequestData: 3,
-  ErrorInDB: 4,
-  HasException: 5,
-};
 
 module.exports = {
   getAllUser,
