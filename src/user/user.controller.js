@@ -89,7 +89,7 @@ const UpdateProfile = async (RequestData) => {
     if (!Reflect.has(RequestData, "Id")) {
       return CreateResponse(
         ReturnCode.InvalidRequestData,
-        "UpdateProfile fail. RequestData do not contain field Id"
+        "UpdateProfile fail. RequestData does not contain field Id"
       );
     }
     var result = await UpdateUserById(RequestData);
