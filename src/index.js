@@ -1,3 +1,5 @@
+// npm i && npm start
+
 const dotenv = require("dotenv");
 const express = require("express");
 const cookieParser = require("cookie-parser");
