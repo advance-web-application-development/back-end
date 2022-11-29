@@ -21,13 +21,15 @@ exports.isAuth = async (req, res, next) => {
     accessTokenFromHeader,
     accessTokenSecret
   );
-  console.log("verified ", verified);
+  // console.log("verified ", verified);
   if (!verified) {
     return res.status(401).send("Your access token cannot verify");
   }
   console.log("email:", verified.payload.email);
   let user = await User.findOne({ email: verified.payload.email });
-  // delete user.password;
+  if (user?.password) {
+    delete user.password;
+  }
   req.user = user;
 
   return next();
