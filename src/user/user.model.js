@@ -17,7 +17,6 @@ const User = mongoose.model(
       },
       name: {
         type: String,
-        required: false,
       },
       username: {
         type: String,
@@ -46,16 +45,12 @@ const User = mongoose.model(
   )
 );
 // module.exports = User;
-const getUserByUsername = function (username) {
-  var query = { username: username };
-  return User.findOne(query);
-};
 
 const GetUserByUserName = async function (RequestData) {
   try {
     if (!Reflect.has(RequestData, "Username")) {
       throw new Error(
-        `GetUserByUserName failed. Không có thông tin Username trong RequestData[${RequestData}]`
+        `GetUserByUserName failed. No Username in RequestData[${RequestData}]`
       );
     }
     var query = { username: RequestData.Username };
@@ -65,7 +60,7 @@ const GetUserByUserName = async function (RequestData) {
         id: result._id,
         name: result.name,
         username: result.username,
-        email: result.email
+        email: result.email,
       };
     }
     return null;
@@ -89,14 +84,14 @@ const UpdateUserById = async (RequestData) => {
     }
     if (updateObject == {}) {
       throw new Error(
-        `updateUserById failed. Không có thông tin nào thay đổi trong RequestData[${RequestData}]`
+        `updateUserById failed. No information required in RequestData[${RequestData}]`
       );
     }
-    var result = await User.findByIdAndUpdate({_id: id}, updateObject);
+    var result = await User.findByIdAndUpdate({ _id: id }, updateObject);
     if (result == null) {
       return {
         Success: false,
-        Message: `UpdateUserById fail. Không tìm thấy user with Id[${id}]`,
+        Message: `UpdateUserById fail. No user has Id[${id}]`,
       };
     }
     return {
@@ -110,7 +105,6 @@ const UpdateUserById = async (RequestData) => {
 
 module.exports = {
   User,
-  getUserByUsername,
   GetUserByUserName,
   UpdateUserById,
 };
