@@ -24,11 +24,11 @@ exports.register = async (req, res) => {
     const user = await User.findOne({
       $or: [{ username: username }, { email: email }],
     });
-    console.log("user", user);
+    // console.log("user", user);
     if (user) {
       res.status(409).send("Username or email is already in use");
     } else {
-      console.log("Start create account");
+      // console.log("Start create account");
       const code = confirmationCode();
       const hashPassword = bcrypt.hashSync(req.body.password, SALT_ROUNDS);
       const newUser = {
@@ -64,11 +64,11 @@ exports.login = async (req, res) => {
   try {
     const username = req.body.username.toLowerCase();
     const password = req.body.password;
-    console.log("req body ", req.body);
+    // console.log("req body ", req.body);
     const user = await User.findOne({
       $or: [{ username: username }, { email: username }],
     });
-    console.log("user login ", user);
+    // console.log("user login ", user);
     if (!user || user == null) {
       return res.status(401).send("Account not found");
     }
@@ -176,17 +176,17 @@ exports.refreshToken = async (req, res) => {
 exports.googleLogin = async (req, res) => {
   try {
     const { token } = req.body;
-    console.log("token ", token);
-    console.log("client id ", process.env.CLIENT_ID);
+    // console.log("token ", token);
+    // console.log("client id ", process.env.CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.CLIENT_ID,
     });
     const { name, email, picture } = ticket.getPayload();
-    console.log("payload ", ticket.getPayload());
+    // console.log("payload ", ticket.getPayload());
 
     let user = await User.findOne({ email: email });
-    console.log("user find first", user);
+    // console.log("user find first", user);
     if (!user) {
       //create user
       const code = confirmationCode();
@@ -211,7 +211,7 @@ exports.googleLogin = async (req, res) => {
     //update user
     user = await User.findOne({ email: email });
 
-    console.log("user find second ", user);
+    // console.log("user find second ", user);
     const accessTokenLife =
       process.env.ACCESS_TOKEN_LIFE || jwtVariable.accessTokenLife;
     const accessTokenSecret =

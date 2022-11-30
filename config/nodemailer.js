@@ -6,7 +6,7 @@ const pass = configMail.pass;
 const URL = process.env.BACKEND_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-console.log("user email", user);
+// console.log("user email", user);
 const transport = nodemailer.createTransport({
   service: "gmail",
   host: "smtp.gmail.com",
@@ -18,7 +18,7 @@ const transport = nodemailer.createTransport({
 });
 
 module.exports.sendConfirmationEmail = (name, email, confirmationCode) => {
-  console.log("Send mail");
+  // console.log("Send mail");
   transport
     .sendMail({
       from: user,
