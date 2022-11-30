@@ -80,9 +80,7 @@ const toggleRole = async (req, res) => {
         "There was an error in creating a group. Please try again after few minutes"
       );
   }
-
   const checkPermission = await _isOwner(req.user, userGroup.group_id);
-  console.log(userGroup);
   if (!checkPermission) {
     return res.status(400).send("You are not allowed to access this");
   }
@@ -92,6 +90,25 @@ const toggleRole = async (req, res) => {
       .send(
         "There was an error in creating a group. Please try again after few minutes"
       );
+  }
+
+
+  const user = await UserGroup.findOne({
+    id: memberId,
+    role: "owner",
+    is_deleted: false,
+  });
+  if (user&&user.length!=0) {
+    const groupOwner = await UserGroup.find({
+      group_id: userGroup.group_id,
+      role: "owner",
+      is_deleted: false,
+    });
+    if (!groupOwner || groupOwner.length < 2) {
+      return res
+        .status(400)
+        .send("Please assign another owner");
+    }
   }
   const coOwner = await UserGroup.updateOne(
     { id: memberId },
