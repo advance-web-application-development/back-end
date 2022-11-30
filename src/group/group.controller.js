@@ -294,7 +294,7 @@ const sendInvitationMail = async (req, res) => {
     if (!checkPermission) {
       return res.status(400).send("You are not allowed to access this");
     }
-    const { email } = req.body;
+    const { email, URL } = req.body;
     const user = await _getUserByEmail(email);
     console.log(user);
     if (user && user.id) {
@@ -315,7 +315,7 @@ const sendInvitationMail = async (req, res) => {
           "There was an error in creating a group. Please try again after few minutes"
         );
     }
-    sendInvitationEmail(group, email);
+    sendInvitationEmail(group, email, URL);
     return res.send({
       group: group,
       email: email,
@@ -356,7 +356,6 @@ const confirmMail = async (req, res) => {
 const getAGroup = async (req, res) => {
   const id = req.params.id;
   const group = await Group.findOne({ id: id });
-
   return res.send({ group });
 };
 module.exports = {

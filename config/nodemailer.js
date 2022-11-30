@@ -32,8 +32,9 @@ module.exports.sendConfirmationEmail = (name, email, confirmationCode) => {
     })
     .catch((err) => console.log(err));
 };
-module.exports.sendInvitationEmail = (group, email) => {
+module.exports.sendInvitationEmail = (group, email, URL) => {
   console.log("Send mail");
+  console.log("URL:", URL)
   transport
     .sendMail({
       from: user,
@@ -42,7 +43,7 @@ module.exports.sendInvitationEmail = (group, email) => {
       html: `<h1>Invitation Email</h1>
           <h2>Hello : ${email}</h2>
           <p>Thank you for your cooperate. Please clicking this following link to join ${group.name} goup in kahoot</p>
-          <a href=${FRONTEND_URL}/group-invitation/${group.id}> Click here</a>
+          <a href=${URL}/group-invitation/${group.id}> Click here</a>
 
           </div>`,
     })
