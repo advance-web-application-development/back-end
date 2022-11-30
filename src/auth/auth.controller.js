@@ -218,6 +218,7 @@ exports.googleLogin = async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET || jwtVariable.accessTokenSecret;
     const dataForAccessToken = {
       username: user.username,
+      email: user.email,
     };
     const accessToken = await authMethod.generateToken(
       dataForAccessToken,
